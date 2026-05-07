@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Training HQ" />
+  <title>Xavier's Training HQ</title>
+
+  <!-- Inline PWA Manifest -->
+  <script>
+    const manifestData = {
+      name: "Xavier's Training HQ",
+      short_name: "Training HQ",
+      description: "4-Week Cut Program — Workout, Meals & Grocery",
+      start_url: "./",
+      display: "standalone",
+      background_color: "#0a0a0f",
+      theme_color: "#0a0a0f",
+      orientation: "portrait",
+      icons: [
+        { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230a0a0f'/%3E%3Ctext x='50%25' y='55%25' font-size='120' text-anchor='middle' dominant-baseline='middle'%3E🏋️%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
+        { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a0a0f'/%3E%3Ctext x='50%25' y='55%25' font-size='320' text-anchor='middle' dominant-baseline='middle'%3E🏋️%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifestData)], { type: "application/json" });
+    const manifestUrl = URL.createObjectURL(blob);
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = manifestUrl;
+    document.head.appendChild(link);
+  </script>
+
+  <!-- Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE = 'training-hq-v1';
+        const URLS  = [self.location.href];
+        self.addEventListener('install', e => {
+          e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', e => {
+          e.waitUntil(caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+          ));
+          self.clients.claim();
+        });
+        self.addEventListener('fetch', e => {
+          e.respondWith(
+            caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+              const clone = res.clone();
+              caches.open(CACHE).then(c => c.put(e.request, clone));
+              return res;
+            }))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl  = URL.createObjectURL(swBlob);
+      window.addEventListener('load', () => navigator.serviceWorker.register(swUrl));
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body {
+      background: #0a0a0f;
+      color: #e8e8e8;
+      font-family: 'DM Mono', 'Courier New', monospace;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 2px; }
+
+    .tab-btn { background:none; border:none; cursor:pointer; padding:10px 20px; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; transition:color 0.2s; position:relative; color:#555; }
+    .tab-btn.active { color:#e94560; }
+    .tab-btn.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:#e94560; }
+    .tab-btn:not(.active):hover { color:#888; }
+
+    .wk-btn { background:none; border:1px solid #222; cursor:pointer; padding:6px 14px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-radius:2px; color:#555; }
+    .wk-btn.active { border-color:#e94560; color:#e94560; background:rgba(233,69,96,0.08); }
+    .wk-btn:not(.active):hover { border-color:#333; color:#888; }
+
+    .pill { border-radius:6px; padding:9px 12px; border-left:3px solid; display:flex; align-items:center; gap:10px; }
+    .pill.lift-pill { cursor:pointer; transition:opacity 0.15s; }
+    .pill.lift-pill:hover { opacity:0.8; }
+
+    .meal-row { border-bottom:1px solid #111; cursor:pointer; transition:background 0.15s; }
+    .meal-row:hover, .meal-row:active { background:rgba(255,255,255,0.02); }
+    .meal-row.open { background:rgba(233,69,96,0.04); }
+
+    .g-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #111; cursor:pointer; user-select:none; transition:opacity 0.15s; }
+    .g-item:active { opacity:0.6; }
+    .g-item.done { opacity:0.3; text-decoration:line-through; }
+
+    .cb { width:18px; height:18px; border:1px solid #e94560; border-radius:2px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s; }
+    .cb.on { background:#e94560; }
+
+    .pbar { height:4px; background:#111; border-radius:2px; margin-top:4px; overflow:hidden; }
+    .pfill { height:100%; background:linear-gradient(90deg,#e94560,#ff6b6b); border-radius:2px; transition:width 0.5s; }
+
+    .ex-row { display:grid; grid-template-columns:1fr 40px 60px; gap:0 8px; padding:10px 0; border-top:1px solid #111; cursor:pointer; transition:opacity 0.2s; }
+    .ex-row.done { opacity:0.32; }
+    .ex-row:active { opacity:0.5; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const liftingPlans = {
+  lower: {
+    1: { label:"Lower Body A", note:"Week 1 — Establish baseline weights. Log everything.", exercises:[
+      {name:"Back Squat",sets:"4",reps:"5",note:"Anchor lift — track weight every week"},
+      {name:"Romanian Deadlift",sets:"3",reps:"8",note:"Control the eccentric, 2 sec down"},
+      {name:"Leg Press",sets:"3",reps:"10",note:"Feet shoulder-width, full range"},
+      {name:"Walking Lunges",sets:"3",reps:"12 each",note:"Hold DBs for added resistance"},
+      {name:"Calf Raises (Machine)",sets:"4",reps:"15",note:"Pause at top"},
+    ]},
+    2: { label:"Lower Body B", note:"Week 2 — Add 5–10lbs to squat. Keep RDL weight the same.", exercises:[
+      {name:"Back Squat",sets:"4",reps:"5",note:"+5–10lbs from Week 1"},
+      {name:"Leg Press",sets:"4",reps:"8",note:"Heavier than Week 1"},
+      {name:"Bulgarian Split Squat",sets:"3",reps:"10 each",note:"Rear foot elevated, DB in each hand"},
+      {name:"Hamstring Curl (Machine)",sets:"3",reps:"12",note:"Slow eccentric"},
+      {name:"Seated Calf Raises",sets:"3",reps:"15",note:"Different stimulus from standing"},
+    ]},
+    3: { label:"Lower Body C", note:"Week 3 — Push squat weight again. Introduce hip hinge variation.", exercises:[
+      {name:"Back Squat",sets:"4",reps:"5",note:"+5–10lbs from Week 2"},
+      {name:"Trap Bar Deadlift",sets:"3",reps:"6",note:"Sub for RDL — more quad involvement"},
+      {name:"Hack Squat",sets:"3",reps:"10",note:"Deep range of motion"},
+      {name:"Reverse Lunges",sets:"3",reps:"12 each",note:"More knee-friendly than forward lunge"},
+      {name:"Calf Raises (Standing)",sets:"4",reps:"12",note:"Single leg if possible"},
+    ]},
+    4: { label:"Lower Body D", note:"Week 4 — Deload accessories. Chase a squat PR or match Week 3.", exercises:[
+      {name:"Back Squat",sets:"4",reps:"5",note:"Match or exceed Week 3"},
+      {name:"Romanian Deadlift",sets:"3",reps:"8",note:"Back to RDL — note improvement from Week 1"},
+      {name:"Leg Extension",sets:"3",reps:"12",note:"Finish the quads"},
+      {name:"Lying Hamstring Curl",sets:"3",reps:"12",note:""},
+      {name:"Calf Raises",sets:"3",reps:"15",note:"Your choice — seated or standing"},
+    ]},
+  },
+  upper: {
+    1: { label:"Upper Body A", note:"Week 1 — Establish baseline. Hit solid form on all compounds.", exercises:[
+      {name:"Barbell Bench Press",sets:"4",reps:"5",note:"Anchor lift — log weight"},
+      {name:"Barbell Row",sets:"4",reps:"5",note:"Overhand grip, chest to bar"},
+      {name:"Overhead Press",sets:"3",reps:"8",note:"Standing, strict form"},
+      {name:"Pull-ups",sets:"3",reps:"Max",note:"Add weight if 10+ reps feel easy"},
+      {name:"DB Incline Press",sets:"3",reps:"10",note:""},
+      {name:"Face Pulls",sets:"3",reps:"15",note:"Rotator cuff health — don't skip"},
+    ]},
+    2: { label:"Upper Body B", note:"Week 2 — Add 5lbs to bench and row. Swap accessory push/pull.", exercises:[
+      {name:"Barbell Bench Press",sets:"4",reps:"5",note:"+5lbs from Week 1"},
+      {name:"Barbell Row",sets:"4",reps:"5",note:"+5lbs from Week 1"},
+      {name:"Seated DB Shoulder Press",sets:"3",reps:"10",note:"Swap from standing OHP"},
+      {name:"Lat Pulldown",sets:"3",reps:"10",note:"Wide grip, full stretch at top"},
+      {name:"Cable Fly",sets:"3",reps:"12",note:"Mid-chest focus"},
+      {name:"Rear Delt Fly (Machine)",sets:"3",reps:"15",note:""},
+    ]},
+    3: { label:"Upper Body C", note:"Week 3 — Push bench again. Introduce dips as a compound variation.", exercises:[
+      {name:"Barbell Bench Press",sets:"4",reps:"5",note:"+5lbs from Week 2"},
+      {name:"Weighted Dips",sets:"3",reps:"8",note:"Add weight via belt if possible"},
+      {name:"Overhead Press",sets:"3",reps:"8",note:"Return to standing OHP"},
+      {name:"Cable Row (Seated)",sets:"4",reps:"10",note:"Neutral grip"},
+      {name:"DB Lateral Raises",sets:"3",reps:"15",note:"Light weight, strict form"},
+      {name:"Face Pulls",sets:"3",reps:"15",note:"Shoulder health"},
+    ]},
+    4: { label:"Upper Body D", note:"Week 4 — Final push. Match or beat Week 3 bench.", exercises:[
+      {name:"Barbell Bench Press",sets:"4",reps:"5",note:"Match or exceed Week 3"},
+      {name:"Barbell Row",sets:"4",reps:"5",note:"Match or exceed Week 3"},
+      {name:"Overhead Press",sets:"3",reps:"8",note:""},
+      {name:"Pull-ups",sets:"3",reps:"Max",note:"Compare to Week 1"},
+      {name:"Tricep Pushdown (Cable)",sets:"3",reps:"12",note:""},
+      {name:"EZ-Bar Curl",sets:"3",reps:"12",note:""},
+    ]},
+  },
+};
+
+const workoutKey = (week, label) => {
+  if (label.includes("Lower")) return liftingPlans.lower[week];
+  if (label.includes("Upper")) return liftingPlans.upper[week];
+  return null;
+};
+
+const schedules = {
+  1: [
+    {day:"Mon",sessions:[{type:"game",  label:"Soccer Game",       sub:"Evening"}]},
+    {day:"Tue",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Wed",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Tempo"}]},
+    {day:"Thu",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Fri",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"}]},
+    {day:"Sat",sessions:[{type:"barry", label:"Barry's Bootcamp",  sub:"~8am · HIIT"}]},
+    {day:"Sun",sessions:[{type:"lift",  label:"Upper Body Lift",   sub:"~7am · 45 min"}]},
+  ],
+  2: [
+    {day:"Mon",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Easy"}]},
+    {day:"Tue",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Wed",sessions:[{type:"lift",  label:"Upper Body Lift",   sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Tempo"}]},
+    {day:"Thu",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Fri",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"}]},
+    {day:"Sat",sessions:[{type:"spin",  label:"Spin Class",        sub:"~8am · ClassPass"}]},
+    {day:"Sun",sessions:[{type:"yoga",  label:"Yoga",              sub:"~8am · ClassPass"}]},
+  ],
+  3: [
+    {day:"Mon",sessions:[{type:"lift",   label:"Lower Body Lift",  sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Easy"}]},
+    {day:"Tue",sessions:[{type:"soccer", label:"Soccer Practice",  sub:"2 hrs"}]},
+    {day:"Wed",sessions:[{type:"lift",   label:"Upper Body Lift",  sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Tempo"}]},
+    {day:"Thu",sessions:[{type:"soccer", label:"Soccer Practice",  sub:"2 hrs"}]},
+    {day:"Fri",sessions:[{type:"lift",   label:"Lower Body Lift",  sub:"45 min"}]},
+    {day:"Sat",sessions:[{type:"barry",  label:"Barry's Bootcamp", sub:"~8am · HIIT"}]},
+    {day:"Sun",sessions:[{type:"pilates",label:"Pilates",          sub:"~8am · ClassPass"}]},
+  ],
+  4: [
+    {day:"Mon",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Easy"}]},
+    {day:"Tue",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Wed",sessions:[{type:"lift",  label:"Upper Body Lift",   sub:"45 min"},{type:"run",label:"Run 4mi",sub:"Tempo"}]},
+    {day:"Thu",sessions:[{type:"soccer",label:"Soccer Practice",   sub:"2 hrs"}]},
+    {day:"Fri",sessions:[{type:"lift",  label:"Lower Body Lift",   sub:"45 min"}]},
+    {day:"Sat",sessions:[{type:"spin",  label:"Spin Class",        sub:"~8am · ClassPass"}]},
+    {day:"Sun",sessions:[{type:"lift",  label:"Upper Body Lift",   sub:"~7am · 45 min"}]},
+  ],
+};
+
+const mealPlan = [
+  {day:"Mon",breakfast:"4 scrambled eggs + turkey bacon",    lunch:"Chicken breast bowl (rice + roasted veg)",   dinner:"Salmon + sweet potato + broccoli",        protein:185},
+  {day:"Tue",breakfast:"Greek yogurt (Fage) + almonds",      lunch:"Ground turkey taco bowl",                    dinner:"Sirloin steak + rice + greens",            protein:190},
+  {day:"Wed",breakfast:"4 scrambled eggs + turkey bacon",    lunch:"Tuna + avocado on whole grain bread",        dinner:"Chicken thighs + lentils + roasted veg",   protein:185},
+  {day:"Thu",breakfast:"Greek yogurt (Fage) + almonds",      lunch:"Chicken breast bowl (quinoa + roasted veg)", dinner:"Salmon + sweet potato + broccoli",         protein:185},
+  {day:"Fri",breakfast:"4 scrambled eggs + turkey bacon",    lunch:"Ground turkey taco bowl",                    dinner:"Sirloin steak + rice + greens",            protein:190},
+  {day:"Sat",breakfast:"Greek yogurt + 2 hard boiled eggs",  lunch:"Tuna + avocado on whole grain bread",        dinner:"Chicken thighs + sweet potato + broccoli", protein:185},
+  {day:"Sun",breakfast:"4 scrambled eggs + turkey bacon",    lunch:"Chicken breast + quinoa + roasted veg",      dinner:"Ground turkey stir fry + rice + veg",      protein:185},
+];
+
+const groceryList = {
+  Proteins:["Chicken breasts (4–5 lbs)","Salmon fillets (4–5 fillets)","Ground turkey (1.5 lbs)","Sirloin steak (2× 6oz)","Canned tuna (4–5 cans)","Eggs (18 count)","Turkey bacon (1 pack)","Greek yogurt Fage 2% (large tub)","Cottage cheese (optional snack)"],
+  Carbs:["White or brown rice (large bag)","Quinoa (small bag)","Sweet potatoes (4–5)","Black beans (1 can)","Whole grain bread (1 loaf)","Lentils (1 bag)"],
+  Produce:["Broccoli (2 large heads)","Bell peppers (4–5)","Zucchini (3–4)","Mixed greens (bag)","Avocados (3–4)","Almonds (small bag)"],
+  "Condiments & Extras":["Salsa","Olive oil","Light shredded cheese","Soy sauce or stir fry sauce"],
+};
+
+const typeColors = {
+  lift:   {bg:"#1a1a2e",accent:"#e94560"},
+  run:    {bg:"#0f3460",accent:"#3b82f6"},
+  soccer: {bg:"#1a2f1a",accent:"#2d5a27"},
+  game:   {bg:"#2a1a0e",accent:"#c17f24"},
+  rest:   {bg:"#1a1a1a",accent:"#444"},
+  barry:  {bg:"#2a0a2a",accent:"#c026d3"},
+  spin:   {bg:"#0a1a2a",accent:"#0ea5e9"},
+  yoga:   {bg:"#1a2a1a",accent:"#10b981"},
+  pilates:{bg:"#2a1a2a",accent:"#f472b6"},
+};
+const typeEmoji = {lift:"🏋️",run:"🏃",soccer:"⚽",game:"🏆",rest:"😴",barry:"🔥",spin:"🚴",yoga:"🧘",pilates:"🤸"};
+
+// ─── WORKOUT DETAIL ───────────────────────────────────────────────────────────
+function WorkoutDetail({plan, accentColor}) {
+  const [done, setDone] = useState({});
+  const toggle = i => setDone(p => ({...p,[i]:!p[i]}));
+  const allDone = plan.exercises.length > 0 && plan.exercises.every((_,i) => done[i]);
+  return (
+    <div style={{background:"#0a0a12",border:`1px solid ${accentColor}44`,borderTop:"none",borderRadius:"0 0 8px 8px",padding:"14px 16px",marginBottom:4}}>
+      <div style={{fontSize:9,letterSpacing:2,color:accentColor,marginBottom:4}}>{plan.label.toUpperCase()}</div>
+      <div style={{fontSize:10,color:"#555",marginBottom:14,fontStyle:"italic"}}>{plan.note}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 40px 60px",gap:"0 8px",paddingBottom:6}}>
+        <div style={{fontSize:9,letterSpacing:2,color:"#333"}}>EXERCISE</div>
+        <div style={{fontSize:9,letterSpacing:2,color:"#333",textAlign:"center"}}>SETS</div>
+        <div style={{fontSize:9,letterSpacing:2,color:"#333",textAlign:"center"}}>REPS</div>
+      </div>
+      {plan.exercises.map((ex,i) => (
+        <div key={i} className={`ex-row${done[i]?" done":""}`} onClick={() => toggle(i)}>
+          <div>
+            <div style={{fontSize:13,color:"#ddd",textDecoration:done[i]?"line-through":"none"}}>{ex.name}</div>
+            {ex.note ? <div style={{fontSize:10,color:"#444",marginTop:2}}>{ex.note}</div> : null}
+          </div>
+          <div style={{fontSize:14,color:accentColor,textAlign:"center",alignSelf:"center",fontWeight:500}}>{ex.sets}</div>
+          <div style={{fontSize:14,color:"#999",textAlign:"center",alignSelf:"center"}}>{ex.reps}</div>
+        </div>
+      ))}
+      {allDone
+        ? <div style={{marginTop:12,textAlign:"center",fontSize:11,letterSpacing:2,color:"#4caf50",background:"rgba(45,90,39,0.12)",border:"1px solid rgba(76,175,80,0.2)",borderRadius:4,padding:10}}>✓ SESSION COMPLETE</div>
+        : <div style={{marginTop:8,fontSize:9,letterSpacing:1,color:"#333",textAlign:"right"}}>TAP EXERCISE TO MARK DONE</div>
+      }
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+function App() {
+  const { useEffect } = React;
+
+  const [activeTab,    setActiveTab]    = useState("workout");
+  const [activeWeek,   setActiveWeek]   = useState(() => {
+    try { return parseInt(localStorage.getItem("thq_week") || "1", 10); } catch { return 1; }
+  });
+  const [checked,      setChecked]      = useState(() => {
+    try { return JSON.parse(localStorage.getItem("thq_checked") || "{}"); } catch { return {}; }
+  });
+  const [expandedMeal,  setExpandedMeal]  = useState(null);
+  const [expandedLift,  setExpandedLift]  = useState(null);
+
+  // Persist week and grocery state to localStorage on every change
+  useEffect(() => { try { localStorage.setItem("thq_week", activeWeek); } catch {} }, [activeWeek]);
+  useEffect(() => { try { localStorage.setItem("thq_checked", JSON.stringify(checked)); } catch {} }, [checked]);
+
+  const schedule     = schedules[activeWeek];
+  const toggleItem   = (cat,item) => setChecked(p => ({...p,[`${cat}::${item}`]:!p[`${cat}::${item}`]}));
+  const totalItems   = Object.values(groceryList).flat().length;
+  const checkedCount = Object.values(checked).filter(Boolean).length;
+  const resetGrocery = () => { if (window.confirm("Reset grocery checklist?")) setChecked({}); };
+
+  return (
+    <div style={{minHeight:"100vh",background:"#0a0a0f",paddingBottom:32}}>
+
+      {/* HEADER */}
+      <div style={{borderBottom:"1px solid #1a1a1a",padding:"env(safe-area-inset-top, 20px) 20px 0 20px"}}>
+        <div style={{paddingTop:8,marginBottom:4}}>
+          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#fff"}}>XAVIER'S</span>
+          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#e94560"}}> TRAINING HQ</span>
+        </div>
+        <div style={{fontSize:10,letterSpacing:2,color:"#555",marginBottom:14}}>4-WEEK CUT · TARGET: 180 LBS</div>
+        <div style={{display:"flex"}}>
+          {[["workout","WORKOUT"],["meals","MEALS"],["grocery","GROCERY"]].map(([id,lbl]) => (
+            <button key={id} className={`tab-btn${activeTab===id?" active":""}`} onClick={() => setActiveTab(id)}>{lbl}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{padding:"20px 20px 0 20px"}}>
+
+        {/* ── WORKOUT ── */}
+        {activeTab === "workout" && (
+          <div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{fontSize:10,letterSpacing:2,color:"#555"}}>WEEK</div>
+              <div style={{display:"flex",gap:6}}>
+                {[1,2,3,4].map(w => (
+                  <button key={w} className={`wk-btn${activeWeek===w?" active":""}`} onClick={() => {setActiveWeek(w);setExpandedLift(null);}}>
+                    {w}{w===1?"★":""}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {activeWeek === 1 && (
+              <div style={{background:"rgba(193,127,36,0.08)",border:"1px solid rgba(193,127,36,0.2)",borderRadius:4,padding:"8px 12px",marginBottom:12,fontSize:11,color:"#c17f24",letterSpacing:1}}>
+                ★ WEEK 1 — GAME WEEK. Lifting shifted to Wed–Sun.
+              </div>
+            )}
+            <div>
+              {schedule.map(({day,sessions}) => (
+                <div key={day} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 0",borderBottom:"1px solid #111"}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"#fff",width:46,flexShrink:0,paddingTop:5}}>{day}</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,flex:1,minWidth:0}}>
+                    {sessions.map((s,si) => {
+                      const c    = typeColors[s.type];
+                      const plan = s.type==="lift" ? workoutKey(activeWeek,s.label) : null;
+                      const key  = `${activeWeek}-${day}-${si}`;
+                      const open = expandedLift === key;
+                      return (
+                        <div key={si}>
+                          <div className={`pill${plan?" lift-pill":""}`} style={{background:c.bg,borderLeftColor:c.accent}}
+                            onClick={() => plan && setExpandedLift(open?null:key)}>
+                            <span style={{fontSize:18,flexShrink:0}}>{typeEmoji[s.type]}</span>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:13,fontWeight:500,color:"#ddd"}}>{s.label}</div>
+                              <div style={{fontSize:10,color:"#555",marginTop:2,letterSpacing:1}}>{s.sub}</div>
+                            </div>
+                            {plan && <div style={{fontSize:10,color:c.accent,flexShrink:0}}>{open?"▲":"▼ VIEW"}</div>}
+                          </div>
+                          {plan && open && <WorkoutDetail plan={plan} accentColor={c.accent} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10,marginTop:18,flexWrap:"wrap"}}>
+              {Object.entries(typeColors).map(([type,c]) => (
+                <div key={type} style={{display:"flex",alignItems:"center",gap:4,fontSize:9,letterSpacing:1,color:"#444"}}>
+                  <div style={{width:7,height:7,background:c.accent,borderRadius:1,flexShrink:0}}/>
+                  {type.toUpperCase()}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── MEALS ── */}
+        {activeTab === "meals" && (
+          <div>
+            <div style={{background:"#0e0e14",border:"1px solid #1a1a1a",borderRadius:6,overflow:"hidden"}}>
+              <div style={{display:"grid",gridTemplateColumns:"48px 1fr 1fr 1fr 72px",background:"#111",padding:"10px 14px",fontSize:9,letterSpacing:2,color:"#555"}}>
+                <div>DAY</div><div>BREAKFAST</div><div>LUNCH</div><div>DINNER</div><div style={{textAlign:"right"}}>PROTEIN</div>
+              </div>
+              {mealPlan.map((row,i) => (
+                <div key={row.day}>
+                  <div className={`meal-row${expandedMeal===i?" open":""}`} onClick={() => setExpandedMeal(expandedMeal===i?null:i)}
+                    style={{display:"grid",gridTemplateColumns:"48px 1fr 1fr 1fr 72px",padding:"12px 14px",alignItems:"center"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:expandedMeal===i?"#e94560":"#fff"}}>{row.day}</div>
+                    <div style={{fontSize:10,color:"#aaa",paddingRight:8,lineHeight:1.4}}>{row.breakfast}</div>
+                    <div style={{fontSize:10,color:"#aaa",paddingRight:8,lineHeight:1.4}}>{row.lunch}</div>
+                    <div style={{fontSize:10,color:"#aaa",paddingRight:8,lineHeight:1.4}}>{row.dinner}</div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:14,fontWeight:500,color:"#e94560"}}>{row.protein}g</div>
+                      <div className="pbar"><div className="pfill" style={{width:`${(row.protein/200)*100}%`}}/></div>
+                    </div>
+                  </div>
+                  {expandedMeal===i && (
+                    <div style={{padding:"0 14px 14px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                      {[["🌅 B/FAST",row.breakfast],["☀️ LUNCH",row.lunch],["🌙 DINNER",row.dinner]].map(([lbl,meal]) => (
+                        <div key={lbl} style={{background:"#111",borderRadius:4,padding:"10px 10px"}}>
+                          <div style={{fontSize:9,letterSpacing:2,color:"#555",marginBottom:5}}>{lbl}</div>
+                          <div style={{fontSize:11,color:"#ddd",lineHeight:1.5}}>{meal}</div>
+                        </div>
+                      ))}
+                      <div style={{gridColumn:"1/-1",background:"rgba(233,69,96,0.06)",border:"1px solid rgba(233,69,96,0.15)",borderRadius:4,padding:"8px 10px",fontSize:10,color:"#e94560",letterSpacing:1}}>
+                        + Orgain shake (2 scoops) + Clif bar · ~60g protein daily
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:10,fontSize:10,letterSpacing:1,color:"#555",textAlign:"center"}}>TAP ROW TO EXPAND · 180–200G PROTEIN · ~2,500 CAL</div>
+          </div>
+        )}
+
+        {/* ── GROCERY ── */}
+        {activeTab === "grocery" && (
+          <div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:3,color:"#fff"}}>SHOPPING LIST</div>
+                <div style={{fontSize:10,letterSpacing:2,color:"#555",marginTop:2}}>WEEK 1 MEAL PREP</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:26,fontWeight:500,color:checkedCount===totalItems?"#4caf50":"#e94560"}}>
+                  {checkedCount}<span style={{fontSize:14,color:"#555"}}>/{totalItems}</span>
+                </div>
+                <div style={{fontSize:9,letterSpacing:2,color:"#555"}}>CHECKED</div>
+                <div onClick={resetGrocery} style={{fontSize:9,letterSpacing:1,color:"#333",marginTop:4,cursor:"pointer",textDecoration:"underline"}}>RESET</div>
+              </div>
+            </div>
+            <div style={{height:3,background:"#111",borderRadius:2,marginBottom:20,overflow:"hidden"}}>
+              <div style={{height:"100%",background:"linear-gradient(90deg,#e94560,#ff6b6b)",width:`${(checkedCount/totalItems)*100}%`,transition:"width 0.3s"}}/>
+            </div>
+            {Object.entries(groceryList).map(([cat,items]) => {
+              const catDone = items.filter(it => checked[`${cat}::${it}`]).length;
+              return (
+                <div key={cat} style={{marginBottom:20}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                    <div style={{fontSize:11,letterSpacing:3,color:"#e94560",fontWeight:500}}>{cat.toUpperCase()}</div>
+                    <div style={{fontSize:10,color:"#444"}}>{catDone}/{items.length}</div>
+                  </div>
+                  <div style={{background:"#0e0e14",border:"1px solid #1a1a1a",borderRadius:6,padding:"0 14px"}}>
+                    {items.map((item,i) => {
+                      const k = `${cat}::${item}`;
+                      const on = checked[k];
+                      return (
+                        <div key={i} className={`g-item${on?" done":""}`} onClick={() => toggleItem(cat,item)}>
+                          <div className={`cb${on?" on":""}`}>
+                            {on && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </div>
+                          <div style={{fontSize:13,color:on?"#333":"#ccc"}}>{item}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {checkedCount===totalItems && (
+              <div style={{textAlign:"center",padding:20,background:"rgba(45,90,39,0.15)",border:"1px solid rgba(45,90,39,0.3)",borderRadius:6,fontSize:12,letterSpacing:2,color:"#4caf50"}}>
+                ✓ ALL ITEMS CHECKED · YOU'RE READY TO PREP
+              </div>
+            )}
+            <div style={{marginTop:14,background:"#0e0e14",border:"1px solid #1a1a1a",borderRadius:6,padding:14}}>
+              <div style={{fontSize:9,letterSpacing:2,color:"#555",marginBottom:8}}>SUNDAY MEAL PREP</div>
+              {["Grill or bake: 4 chicken breasts + 2 salmon fillets","Brown: 1.5 lbs ground turkey","Hard boil: 12 eggs","Cook: 3 cups dry rice + 1 cup dry quinoa","Roast: 2 trays mixed veg (broccoli, peppers, zucchini)","Roast: 4 sweet potatoes","Mid-week refresh Wed/Thu: fresh salmon + chicken thighs"].map((note,i,arr) => (
+                <div key={i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:i<arr.length-1?"1px solid #111":"none"}}>
+                  <div style={{color:"#e94560",fontSize:10,flexShrink:0}}>{i+1}.</div>
+                  <div style={{fontSize:11,color:"#888",lineHeight:1.4}}>{note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
