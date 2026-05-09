@@ -25,3 +25,12 @@ A fixed weekly table of meals: one Breakfast, Lunch, and Dinner per day, with a 
 
 **Grocery List**
 A categorized list of shopping items needed for the weekly Meal Plan. Items can be checked off. The Grocery List is currently static (does not vary by Week).
+
+**Goal**
+A body composition target with a start date, end date, target weight (lbs), and target body fat %. Only one Goal is active at a time; creating a new Goal replaces the previous one. A Goal is independent of the Program — it governs where the user is headed physically, not what they do each day. Stored in `localStorage`.
+
+**Check-in**
+A daily record associated with the active Goal. Contains a date and weight (required) and body fat % (optional). The first Check-in defines the starting point for the Pace Line.
+
+**Pace Line**
+A static straight line on a Progress chart drawn from the first Check-in's value to the Goal's target value on the end date. Answers "am I on track?" by showing where the user should be each day. Only rendered after the first Check-in is logged.

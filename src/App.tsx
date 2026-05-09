@@ -3,6 +3,7 @@ import BottomNav from './components/BottomNav';
 import WorkoutPage from './pages/WorkoutPage';
 import MealsPage from './pages/MealsPage';
 import GroceryPage from './pages/GroceryPage';
+import ProgressPage from './pages/ProgressPage';
 
 export default function App() {
   return (
@@ -27,9 +28,10 @@ export default function App() {
         <main className="px-5 pt-5">
           <Routes>
             <Route path="/" element={<Navigate to="/workout" replace />} />
-            <Route path="/workout" element={<WorkoutPage />} />
-            <Route path="/meals"   element={<MealsPage />} />
-            <Route path="/grocery" element={<GroceryPage />} />
+            <Route path="/workout"  element={<WorkoutPage />} />
+            <Route path="/meals"    element={<MealsPage />} />
+            <Route path="/grocery"  element={<GroceryPage />} />
+            <Route path="/progress" element={<ProgressPage />} />
           </Routes>
         </main>
 

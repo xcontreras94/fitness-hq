@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { to: '/workout', emoji: '🏋️', label: 'WORKOUT' },
-  { to: '/meals',   emoji: '🍽️', label: 'MEALS' },
-  { to: '/grocery', emoji: '🛒', label: 'GROCERY' },
+  { to: '/workout',  emoji: '🏋️', label: 'WORKOUT' },
+  { to: '/meals',    emoji: '🍽️', label: 'MEALS' },
+  { to: '/grocery',  emoji: '🛒', label: 'GROCERY' },
+  { to: '/progress', emoji: '📈', label: 'PROGRESS' },
 ];
 
 export default function BottomNav() {
