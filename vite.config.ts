@@ -5,4 +5,13 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   base: '/fitness-hq/',
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          charts: ['recharts'],
+        },
+      },
+    },
+  },
 });

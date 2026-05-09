@@ -10,10 +10,6 @@ import {
 } from '../data/progress';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
-const fmtShort = (d: string) => {
-  const dt = new Date(d + 'T00:00:00');
-  return `${dt.getMonth() + 1}/${dt.getDate()}`;
-};
 const fmtFull = (d: string) => {
   const dt = new Date(d + 'T00:00:00');
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -248,10 +244,10 @@ function ProgressChart({
             }}
             labelStyle={{ color: '#555', fontSize: 9 }}
             itemStyle={{ color: '#ddd' }}
-            labelFormatter={fmtFull}
-            formatter={(value: number, name: string) => {
+            labelFormatter={(d) => fmtFull(d as string)}
+            formatter={(value, name) => {
               const pace = PACES.find(p => p.dataKey === name);
-              return [`${value} ${unit}`, pace ? pace.label : label];
+              return [`${value ?? ''} ${unit}`, pace ? pace.label : label];
             }}
             itemSorter={(item) => {
               const order: Record<string, number> = {
@@ -402,7 +398,7 @@ function Dashboard({
 
   const weightData = buildWeightData(checkIns, goal);
   const bfData = buildBodyFatData(checkIns, goal);
-  const hasBfChart = bfData.some(d => d.actual != null || d.pace != null);
+  const hasBfChart = bfData.some(d => d.actual != null);
 
   const handleLog = (e: React.FormEvent) => {
     e.preventDefault();
