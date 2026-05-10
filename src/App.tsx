@@ -21,18 +21,19 @@ export default function App() {
 
   const goal = loadGoal()!;
   const subheader = `4-WEEK CUT · TARGET: ${goal.targetWeight} LBS`;
+  const nameLabel = goal.name ? `${goal.name.toUpperCase()}'S` : 'YOUR';
 
   return (
     <HashRouter>
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden" style={{ paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))' }}>
 
         {/* Header */}
         <header
-          className="bg-white border-b border-gray-200 px-5"
+          className="sticky top-0 z-10 bg-white border-b border-gray-200 px-5"
           style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
         >
           <div className="pt-2 mb-1">
-            <span className="font-display text-[28px] tracking-[4px] text-gray-900">XAVIER'S</span>
+            <span className="font-display text-[28px] tracking-[4px] text-gray-900">{nameLabel}</span>
             <span className="font-display text-[28px] tracking-[4px] text-blue-500"> TRAINING HQ</span>
           </div>
           <div className="text-[10px] tracking-[2px] text-gray-400 mb-3">

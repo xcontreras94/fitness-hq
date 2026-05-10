@@ -254,19 +254,24 @@ function CheckInHistory({
           ) : (
             <div className="flex items-center gap-3 py-2.5">
               <span className="text-[11px] text-gray-400 w-14 shrink-0">{fmtFull(ci.date)}</span>
-              <span className="text-[13px] text-gray-900 flex-1">
-                {ci.weight} <span className="text-[10px] text-gray-400">lbs</span>
-              </span>
-              <span className="text-[12px] text-gray-500 w-12 text-right">
-                {ci.bodyFat != null ? `${ci.bodyFat}%` : <span className="text-gray-200">—</span>}
-              </span>
+              <div className="flex items-baseline gap-2 flex-1">
+                <span className="text-[13px] text-gray-900">
+                  {ci.weight} <span className="text-[10px] text-gray-400">lbs</span>
+                </span>
+                {ci.bodyFat != null
+                  ? <span className="text-[13px] text-gray-900">
+                    {ci.bodyFat}% <span className="text-[10px] text-gray-400">Body Fat</span>
+                  </span>
+                  : <span className="text-[12px] text-gray-200">—</span>
+                }
+              </div>
               <button onClick={() => startEdit(ci)}
-                className="text-[9px] tracking-[1px] text-gray-400 hover:text-gray-600 transition-colors ml-2">
-                EDIT
+                className="text-base leading-none hover:opacity-60 transition-opacity">
+                ✏️
               </button>
               <button onClick={() => onDelete(ci.date)}
-                className="text-[9px] tracking-[1px] text-gray-400 hover:text-red-400 transition-colors">
-                DEL
+                className="text-base leading-none hover:opacity-60 transition-opacity">
+                🗑️
               </button>
             </div>
           )}

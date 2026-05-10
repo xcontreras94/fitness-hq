@@ -2,6 +2,7 @@ const GOAL_KEY = 'fitness-hq:goal';
 const CHECKINS_KEY = 'fitness-hq:checkins';
 
 export interface Goal {
+  name?: string;
   startDate: string;
   endDate: string;
   targetWeight: number;

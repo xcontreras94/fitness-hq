@@ -34,6 +34,7 @@ export default function SetupPage({ onComplete }: { onComplete: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [form, setForm] = useState({
+    name: '',
     startDate: today,
     startingWeight: '',
     targetWeight: '',
@@ -53,6 +54,7 @@ export default function SetupPage({ onComplete }: { onComplete: () => void }) {
   const hasBf = form.startingBodyFat.length > 0;
 
   const canSubmit =
+    form.name.trim().length > 0 &&
     !!form.startDate &&
     parseFloat(form.startingWeight) > 0 &&
     parseFloat(form.targetWeight) > 0 &&
@@ -64,6 +66,7 @@ export default function SetupPage({ onComplete }: { onComplete: () => void }) {
     endD.setDate(endD.getDate() + 27);
 
     const goal: Goal = {
+      name: form.name.trim(),
       startDate: form.startDate,
       endDate: endD.toISOString().slice(0, 10),
       startingWeight: parseFloat(form.startingWeight),
@@ -92,7 +95,9 @@ export default function SetupPage({ onComplete }: { onComplete: () => void }) {
         style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
       >
         <div className="pt-2 mb-1">
-          <span className="font-display text-[28px] tracking-[4px] text-gray-900">XAVIER'S</span>
+          <span className="font-display text-[28px] tracking-[4px] text-gray-900">
+            {form.name.trim() ? `${form.name.trim().toUpperCase()}'S` : 'YOUR'}
+          </span>
           <span className="font-display text-[28px] tracking-[4px] text-blue-500"> TRAINING HQ</span>
         </div>
         <div className="text-[10px] tracking-[2px] text-gray-400 mb-3">
@@ -105,6 +110,22 @@ export default function SetupPage({ onComplete }: { onComplete: () => void }) {
         <p className="text-[13px] text-gray-500 mb-6">
           This information personalizes your workout schedule, progress tracking, and run targets.
         </p>
+
+        {/* Name */}
+        <div className={sectionCls}>
+          <p className={sectionTitle}>YOUR NAME</p>
+          <div>
+            <label className={labelCls}>FIRST NAME</label>
+            <input
+              type="text"
+              className={inputCls}
+              value={form.name}
+              onChange={set('name')}
+              placeholder="e.g. Alex"
+              required
+            />
+          </div>
+        </div>
 
         {/* Program dates */}
         <div className={sectionCls}>
