@@ -19,6 +19,9 @@ export interface Session {
   type: SessionType;
   label: string;
   sub: string;
+  calories: number;
+  rationale: string;
+  paceType?: 'easy' | 'tempo';
 }
 
 export interface DaySchedule {
@@ -112,40 +115,61 @@ export const liftingPlans: Record<'lower' | 'upper', Record<number, LiftPlan>> =
 
 export const schedules: Record<number, DaySchedule[]> = {
   1: [
-    { day: 'Mon', sessions: [{ type: 'game',   label: 'Soccer Game',      sub: 'Evening' }] },
-    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice',  sub: '2 hrs' }] },
-    { day: 'Wed', sessions: [{ type: 'lift',   label: 'Lower Body Lift',  sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Tempo' }] },
-    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice',  sub: '2 hrs' }] },
-    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift',  sub: '45 min' }] },
-    { day: 'Sat', sessions: [{ type: 'barry',  label: "Barry's Bootcamp", sub: '~8am · HIIT' }] },
-    { day: 'Sun', sessions: [{ type: 'lift',   label: 'Upper Body Lift',  sub: '~7am · 45 min' }] },
+    { day: 'Mon', sessions: [{ type: 'game',   label: 'Soccer Game',     sub: 'Evening',        calories: 600, rationale: 'Game week opener. Full-speed match play primes the nervous system and sets the athletic baseline for the cut.' }] },
+    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Technical session — focus on positioning and touch. Lower intensity than game day, keeps legs fresh for Wednesday.' }] },
+    { day: 'Wed', sessions: [
+      { type: 'lift',  label: 'Lower Body Lift', sub: '45 min',   calories: 280, rationale: 'Establish squat baseline. Week 1 is about form and finding working weights — not max effort. Log everything.' },
+      { type: 'run',   label: 'Run 4mi',         sub: 'Tempo',    calories: 400, rationale: 'Tempo effort after lifting tests your ability to push when fatigued. Builds lactate threshold critical for fat loss during the cut.', paceType: 'tempo' },
+    ]},
+    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Second practice of the week. Maintain intensity but listen to your legs — recovery starts tonight.' }] },
+    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min',          calories: 280, rationale: 'Second lower session this week. Legs will feel the accumulated load — that fatigue is the adaptation signal.' }] },
+    { day: 'Sat', sessions: [{ type: 'barry',  label: "Barry's Bootcamp", sub: '~8am · HIIT',   calories: 650, rationale: "HIIT accelerates fat loss by maximizing EPOC (calories burned post-workout). Barry's combines strength and cardio in a format that's hard to replicate solo." }] },
+    { day: 'Sun', sessions: [{ type: 'lift',   label: 'Upper Body Lift', sub: '~7am · 45 min',  calories: 260, rationale: 'Upper body to close the week. Fresh from rest — push the compounds hard and set your Week 1 benchmarks.' }] },
   ],
   2: [
-    { day: 'Mon', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Easy' }] },
-    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs' }] },
-    { day: 'Wed', sessions: [{ type: 'lift',   label: 'Upper Body Lift', sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Tempo' }] },
-    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs' }] },
-    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min' }] },
-    { day: 'Sat', sessions: [{ type: 'spin',   label: 'Spin Class',      sub: '~8am · ClassPass' }] },
-    { day: 'Sun', sessions: [{ type: 'yoga',   label: 'Yoga',            sub: '~8am · ClassPass' }] },
+    { day: 'Mon', sessions: [
+      { type: 'lift', label: 'Lower Body Lift', sub: '45 min', calories: 280, rationale: 'Add 5–10lbs to squat from Week 1. Lower body drives the most total muscle mass — prioritize it.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Easy Run',  calories: 350, rationale: 'Easy pace after lifting — this is active recovery and aerobic base building. Do not push it; save output for Wednesday.', paceType: 'easy' },
+    ]},
+    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Mid-week practice. Use it as active recovery — focus on ball movement and positioning, not max sprints.' }] },
+    { day: 'Wed', sessions: [
+      { type: 'lift', label: 'Upper Body Lift', sub: '45 min', calories: 260, rationale: 'Bench and row both go up 5lbs. Upper body mid-week while lower body recovers from Monday.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Tempo',  calories: 400, rationale: 'Tempo run with fresh legs. This is where your aerobic ceiling rises — push the pace and hold form through mile 4.', paceType: 'tempo' },
+    ]},
+    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Stay sharp — game shape matters even during a cut. Focus on recovery between high-intensity moments.' }] },
+    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min',          calories: 280, rationale: 'Final lower session of the week. Squat should feel stronger than Monday — the Week 2 loading is working.' }] },
+    { day: 'Sat', sessions: [{ type: 'spin',   label: 'Spin Class',      sub: '~8am · ClassPass', calories: 550, rationale: 'Low-impact, high-calorie cardio. Spin is joint-friendly and lets you push cardiovascular output without stressing the legs structurally.' }] },
+    { day: 'Sun', sessions: [{ type: 'yoga',   label: 'Yoga',            sub: '~8am · ClassPass', calories: 150, rationale: 'Active recovery. Mobility work prevents injury and keeps movement quality high as training volume increases.' }] },
   ],
   3: [
-    { day: 'Mon', sessions: [{ type: 'lift',    label: 'Lower Body Lift',  sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Easy' }] },
-    { day: 'Tue', sessions: [{ type: 'soccer',  label: 'Soccer Practice',  sub: '2 hrs' }] },
-    { day: 'Wed', sessions: [{ type: 'lift',    label: 'Upper Body Lift',  sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Tempo' }] },
-    { day: 'Thu', sessions: [{ type: 'soccer',  label: 'Soccer Practice',  sub: '2 hrs' }] },
-    { day: 'Fri', sessions: [{ type: 'lift',    label: 'Lower Body Lift',  sub: '45 min' }] },
-    { day: 'Sat', sessions: [{ type: 'barry',   label: "Barry's Bootcamp", sub: '~8am · HIIT' }] },
-    { day: 'Sun', sessions: [{ type: 'pilates', label: 'Pilates',          sub: '~8am · ClassPass' }] },
+    { day: 'Mon', sessions: [
+      { type: 'lift', label: 'Lower Body Lift', sub: '45 min', calories: 280, rationale: 'Trap bar deadlift replaces RDL — more quad involvement and a fresh stimulus. Add weight to squat again; you should be stronger.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Easy Run',  calories: 350, rationale: 'Easy pace post-lift. Aerobic base at Week 3 is noticeably stronger than Week 1 — the easy pace should feel genuinely easy.', paceType: 'easy' },
+    ]},
+    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Intensity picks up at this stage of the cut. Notice whether you are recovering faster between sprints compared to Week 1.' }] },
+    { day: 'Wed', sessions: [
+      { type: 'lift', label: 'Upper Body Lift', sub: '45 min', calories: 260, rationale: 'Weighted dips replace accessory push work. Bench continues to climb — match or beat last week on every compound.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Tempo',  calories: 400, rationale: 'Week 3 tempo should feel hard but controlled. If it does not feel hard, you have been holding back the previous two weeks.', paceType: 'tempo' },
+    ]},
+    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Keep it technical. Soreness at similar intensities should be less than Week 1 — your body has adapted.' }] },
+    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min',          calories: 280, rationale: 'Hack squat replaces leg press for deeper range of motion. Go lighter than you think — the stimulus is different.' }] },
+    { day: 'Sat', sessions: [{ type: 'barry',  label: "Barry's Bootcamp", sub: '~8am · HIIT',   calories: 650, rationale: 'Second Barry\'s of the program. Benchmark against Week 1 — output should be higher and recovery faster.' }] },
+    { day: 'Sun', sessions: [{ type: 'pilates', label: 'Pilates',         sub: '~8am · ClassPass', calories: 180, rationale: 'Core stability and posterior chain work. Complements the heavy lifting and keeps movement quality sharp heading into the final week.' }] },
   ],
   4: [
-    { day: 'Mon', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Easy' }] },
-    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs' }] },
-    { day: 'Wed', sessions: [{ type: 'lift',   label: 'Upper Body Lift', sub: '45 min' }, { type: 'run', label: 'Run 4mi', sub: 'Tempo' }] },
-    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs' }] },
-    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min' }] },
-    { day: 'Sat', sessions: [{ type: 'spin',   label: 'Spin Class',      sub: '~8am · ClassPass' }] },
-    { day: 'Sun', sessions: [{ type: 'lift',   label: 'Upper Body Lift', sub: '~7am · 45 min' }] },
+    { day: 'Mon', sessions: [
+      { type: 'lift', label: 'Lower Body Lift', sub: '45 min', calories: 280, rationale: 'Final lower body week. Match or exceed Week 3 squat. Accessories deload — save energy for the compound PR.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Easy Run',  calories: 350, rationale: 'Easy pace. Your body is near peak adaptation — enjoy the aerobic fitness you have built over 4 weeks.', paceType: 'easy' },
+    ]},
+    { day: 'Tue', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Penultimate practice. Notice how your endurance and sprint recovery compare to where you started in Week 1.' }] },
+    { day: 'Wed', sessions: [
+      { type: 'lift', label: 'Upper Body Lift', sub: '45 min', calories: 260, rationale: 'Final upper body session. Match or beat Week 3 bench and row. Log your numbers — this is your 4-week result.' },
+      { type: 'run',  label: 'Run 4mi',         sub: 'Tempo',  calories: 400, rationale: 'Last tempo run of the program. This pace should feel more controlled than Week 1 — that difference is your fitness gain.', paceType: 'tempo' },
+    ]},
+    { day: 'Thu', sessions: [{ type: 'soccer', label: 'Soccer Practice', sub: '2 hrs',           calories: 450, rationale: 'Last regular practice of the program. Full effort — no saving yourself for anything after this.' }] },
+    { day: 'Fri', sessions: [{ type: 'lift',   label: 'Lower Body Lift', sub: '45 min',          calories: 280, rationale: 'Final lower body session. Chase the squat PR or match Week 3. Either way, you are stronger than 4 weeks ago.' }] },
+    { day: 'Sat', sessions: [{ type: 'spin',   label: 'Spin Class',      sub: '~8am · ClassPass', calories: 550, rationale: 'Final cardio session of the program. Push output — you have earned it and recovery is no longer a concern.' }] },
+    { day: 'Sun', sessions: [{ type: 'lift',   label: 'Upper Body Lift', sub: '~7am · 45 min',  calories: 260, rationale: 'Program closer. Match or beat every Week 4 lift. These numbers are the benchmark for your next program.' }] },
   ],
 };
 

@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   Goal, CheckIn, ChartDataPoint,
-  loadGoal, saveGoal, loadCheckIns, clearProgress,
+  loadGoal, loadCheckIns, clearProgress,
   upsertCheckIn, deleteCheckIn, buildWeightData, buildBodyFatData,
 } from '../data/progress';
 
@@ -16,116 +16,15 @@ const fmtFull = (d: string) => {
 };
 
 const inputCls =
-  'bg-[#111] border border-[#222] rounded px-2 py-1.5 text-white text-[12px] w-full focus:outline-none focus:border-[#333]';
-const labelCls = 'text-[9px] tracking-[1px] text-[#555] block mb-1';
-
-// ── Setup form ────────────────────────────────────────────────────────────────
-
-function SetupForm({
-  existingGoal,
-  onComplete,
-}: {
-  existingGoal: Goal | null;
-  onComplete: (goal: Goal, ci: CheckIn) => void;
-}) {
-  const [form, setForm] = useState({
-    endDate: existingGoal?.endDate ?? '',
-    targetWeight: existingGoal ? String(existingGoal.targetWeight) : '',
-    targetBodyFat: existingGoal ? String(existingGoal.targetBodyFat) : '',
-    date: todayStr(),
-    weight: '',
-    bodyFat: '',
-  });
-
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }));
-
-  const canSubmit =
-    form.endDate &&
-    parseFloat(form.targetWeight) > 0 &&
-    parseFloat(form.targetBodyFat) > 0 &&
-    form.date &&
-    parseFloat(form.weight) > 0;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const goal: Goal = {
-      startDate: form.date,
-      endDate: form.endDate,
-      targetWeight: parseFloat(form.targetWeight),
-      targetBodyFat: parseFloat(form.targetBodyFat),
-    };
-    const ci: CheckIn = {
-      date: form.date,
-      weight: parseFloat(form.weight),
-      bodyFat: form.bodyFat ? parseFloat(form.bodyFat) : undefined,
-    };
-    onComplete(goal, ci);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <p className="text-[10px] tracking-[2px] text-[#555] mb-4">SETUP TRACKING</p>
-
-      <div className="bg-[#0e0e14] border border-[#1a1a1a] rounded-md p-4 mb-3">
-        <p className="text-[9px] tracking-[2px] text-[#444] mb-3">GOAL</p>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className={labelCls}>END DATE</label>
-            <input type="date" className={inputCls} value={form.endDate} onChange={set('endDate')} required />
-          </div>
-          <div>
-            <label className={labelCls}>TARGET WEIGHT</label>
-            <input type="number" step="0.1" className={inputCls} value={form.targetWeight}
-              onChange={set('targetWeight')} placeholder="180" required />
-          </div>
-          <div>
-            <label className={labelCls}>TARGET BF%</label>
-            <input type="number" step="0.1" className={inputCls} value={form.targetBodyFat}
-              onChange={set('targetBodyFat')} placeholder="12" required />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-[#0e0e14] border border-[#1a1a1a] rounded-md p-4 mb-4">
-        <p className="text-[9px] tracking-[2px] text-[#444] mb-3">FIRST CHECK-IN</p>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className={labelCls}>DATE</label>
-            <input type="date" className={inputCls} value={form.date} onChange={set('date')} required />
-          </div>
-          <div>
-            <label className={labelCls}>WEIGHT (LBS)</label>
-            <input type="number" step="0.1" className={inputCls} value={form.weight}
-              onChange={set('weight')} placeholder="192" required />
-          </div>
-          <div>
-            <label className={labelCls}>
-              BF% <span className="text-[#2a2a2a]">OPT</span>
-            </label>
-            <input type="number" step="0.1" className={inputCls} value={form.bodyFat}
-              onChange={set('bodyFat')} placeholder="18" />
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="w-full py-3 rounded text-[11px] tracking-[2px] font-medium transition-opacity disabled:opacity-25 bg-[#e94560] text-white"
-      >
-        START TRACKING
-      </button>
-    </form>
-  );
-}
+  'bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-gray-900 text-[12px] w-full focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all';
+const labelCls = 'text-[9px] tracking-[1px] text-gray-500 block mb-1';
 
 // ── Chart ─────────────────────────────────────────────────────────────────────
 
 const PACES = [
-  { key: 'conservative' as const, dataKey: 'paceConservative' as const, label: 'CONSERVATIVE', color: '#2d9b6a' },
-  { key: 'regular'      as const, dataKey: 'paceRegular'      as const, label: 'REGULAR',      color: '#555'    },
-  { key: 'aggressive'   as const, dataKey: 'paceAggressive'   as const, label: 'AGGRESSIVE',   color: '#c17f24' },
+  { key: 'conservative' as const, dataKey: 'paceConservative' as const, label: 'CONSERVATIVE', color: '#3b82f6' },
+  { key: 'regular'      as const, dataKey: 'paceRegular'      as const, label: 'REGULAR',      color: '#9ca3af' },
+  { key: 'aggressive'   as const, dataKey: 'paceAggressive'   as const, label: 'AGGRESSIVE',   color: '#d97706' },
 ];
 
 function ProgressChart({
@@ -175,22 +74,22 @@ function ProgressChart({
   };
 
   return (
-    <div className="bg-[#0e0e14] border border-[#1a1a1a] rounded-md p-4 mb-3">
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-3">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <p className="text-[9px] tracking-[2px] text-[#555]">
+        <p className="text-[9px] tracking-[2px] text-gray-400">
           {label} · {unit.toUpperCase()}
         </p>
         {latest?.actual != null && (
           <div className="text-right">
             <div className="flex items-baseline gap-1.5 justify-end">
-              <span className="text-[18px] font-medium leading-none" style={{ color }}>
+              <span className="text-[18px] font-semibold leading-none" style={{ color }}>
                 {latest.actual}
               </span>
-              <span className="text-[9px] text-[#555]">{unit}</span>
+              <span className="text-[9px] text-gray-400">{unit}</span>
             </div>
             {remaining != null && (
-              <p className="text-[9px] tracking-[1px] text-[#444] mt-0.5">
+              <p className="text-[9px] tracking-[1px] text-gray-400 mt-0.5">
                 {Math.abs(remaining)} {unit} to go
               </p>
             )}
@@ -206,8 +105,8 @@ function ProgressChart({
             onClick={() => toggle(p.key)}
             className="text-[8px] tracking-[1px] px-2 py-0.5 rounded border transition-all"
             style={{
-              color: visible[p.key] ? p.color : '#333',
-              borderColor: visible[p.key] ? p.color : '#1a1a1a',
+              color: visible[p.key] ? p.color : '#d1d5db',
+              borderColor: visible[p.key] ? p.color : '#e5e7eb',
             }}
           >
             {p.label}
@@ -217,33 +116,33 @@ function ProgressChart({
 
       <ResponsiveContainer width="100%" height={160}>
         <LineChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-          <CartesianGrid stroke="#111" vertical={false} />
+          <CartesianGrid stroke="#f3f4f6" vertical={false} />
           <XAxis
             dataKey="date"
             ticks={weekTicks}
             tickFormatter={fmtWeek}
-            tick={{ fill: '#444', fontSize: 9 }}
+            tick={{ fill: '#9ca3af', fontSize: 9 }}
             axisLine={false}
             tickLine={false}
           />
           {weekTicks.slice(1).map(date => (
-            <ReferenceLine key={date} x={date} stroke="#1a1a1a" strokeWidth={1} />
+            <ReferenceLine key={date} x={date} stroke="#f3f4f6" strokeWidth={1} />
           ))}
           <YAxis
             domain={['auto', 'auto']}
-            tick={{ fill: '#444', fontSize: 9 }}
+            tick={{ fill: '#9ca3af', fontSize: 9 }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip
             contentStyle={{
-              background: '#0e0e14',
-              border: '1px solid #222',
-              borderRadius: 4,
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
               fontSize: 11,
             }}
-            labelStyle={{ color: '#555', fontSize: 9 }}
-            itemStyle={{ color: '#ddd' }}
+            labelStyle={{ color: '#9ca3af', fontSize: 9 }}
+            itemStyle={{ color: '#374151' }}
             labelFormatter={(d) => fmtFull(d as string)}
             formatter={(value, name) => {
               const pace = PACES.find(p => p.dataKey === name);
@@ -323,10 +222,10 @@ function CheckInHistory({
   const sorted = [...checkIns].reverse();
 
   return (
-    <div className="bg-[#0e0e14] border border-[#1a1a1a] rounded-md mb-4">
-      <p className="text-[9px] tracking-[2px] text-[#444] px-4 pt-4 pb-3">LOG HISTORY</p>
+    <div className="bg-white border border-gray-200 rounded-2xl mb-4 overflow-hidden">
+      <p className="text-[9px] tracking-[2px] text-gray-400 px-4 pt-4 pb-3">LOG HISTORY</p>
       {sorted.map((ci, i) => (
-        <div key={ci.date} className={`px-4 ${i < sorted.length - 1 ? 'border-b border-[#111]' : ''}`}>
+        <div key={ci.date} className={`px-4 ${i < sorted.length - 1 ? 'border-b border-gray-100' : ''}`}>
           {editingDate === ci.date ? (
             <div className="py-3">
               <div className="grid grid-cols-2 gap-2 mb-2">
@@ -336,37 +235,37 @@ function CheckInHistory({
                     value={editWeight} onChange={e => setEditWeight(e.target.value)} />
                 </div>
                 <div>
-                  <label className={labelCls}>BF% <span className="text-[#2a2a2a]">OPT</span></label>
+                  <label className={labelCls}>BF% <span className="text-gray-300">OPT</span></label>
                   <input type="number" step="0.1" className={inputCls}
                     value={editBf} onChange={e => setEditBf(e.target.value)} />
                 </div>
               </div>
               <div className="flex gap-3">
                 <button onClick={saveEdit} disabled={!editWeight}
-                  className="text-[9px] tracking-[1px] text-[#e94560] disabled:opacity-30">
+                  className="text-[9px] tracking-[1px] text-blue-500 disabled:opacity-30">
                   SAVE
                 </button>
                 <button onClick={() => setEditingDate(null)}
-                  className="text-[9px] tracking-[1px] text-[#444] hover:text-[#888]">
+                  className="text-[9px] tracking-[1px] text-gray-400 hover:text-gray-600">
                   CANCEL
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-3 py-2.5">
-              <span className="text-[11px] text-[#555] w-14 shrink-0">{fmtFull(ci.date)}</span>
-              <span className="text-[13px] text-white flex-1">
-                {ci.weight} <span className="text-[10px] text-[#555]">lbs</span>
+              <span className="text-[11px] text-gray-400 w-14 shrink-0">{fmtFull(ci.date)}</span>
+              <span className="text-[13px] text-gray-900 flex-1">
+                {ci.weight} <span className="text-[10px] text-gray-400">lbs</span>
               </span>
-              <span className="text-[12px] text-[#666] w-12 text-right">
-                {ci.bodyFat != null ? `${ci.bodyFat}%` : <span className="text-[#2a2a2a]">—</span>}
+              <span className="text-[12px] text-gray-500 w-12 text-right">
+                {ci.bodyFat != null ? `${ci.bodyFat}%` : <span className="text-gray-200">—</span>}
               </span>
               <button onClick={() => startEdit(ci)}
-                className="text-[9px] tracking-[1px] text-[#444] hover:text-[#888] transition-colors ml-2">
+                className="text-[9px] tracking-[1px] text-gray-400 hover:text-gray-600 transition-colors ml-2">
                 EDIT
               </button>
               <button onClick={() => onDelete(ci.date)}
-                className="text-[9px] tracking-[1px] text-[#444] hover:text-[#e94560] transition-colors">
+                className="text-[9px] tracking-[1px] text-gray-400 hover:text-red-400 transition-colors">
                 DEL
               </button>
             </div>
@@ -413,14 +312,14 @@ function Dashboard({
 
   return (
     <div>
-      <p className="text-[10px] tracking-[2px] text-[#555] mb-4">
-        TARGET {goal.targetWeight} LBS · {goal.targetBodyFat}% BF · BY{' '}
+      <p className="text-[10px] tracking-[2px] text-gray-400 mb-4">
+        TARGET {goal.targetWeight} LBS{goal.targetBodyFat ? ` · ${goal.targetBodyFat}% BF` : ''} · BY{' '}
         {fmtFull(goal.endDate).toUpperCase()}
       </p>
 
       {/* Log form */}
-      <form onSubmit={handleLog} className="bg-[#0e0e14] border border-[#1a1a1a] rounded-md p-4 mb-4">
-        <p className="text-[9px] tracking-[2px] text-[#444] mb-3">LOG CHECK-IN</p>
+      <form onSubmit={handleLog} className="bg-white border border-gray-200 rounded-2xl p-4 mb-4">
+        <p className="text-[9px] tracking-[2px] text-gray-400 mb-3">LOG CHECK-IN</p>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
             <label className={labelCls}>DATE</label>
@@ -445,7 +344,7 @@ function Dashboard({
           </div>
           <div>
             <label className={labelCls}>
-              BF% <span className="text-[#2a2a2a]">OPT</span>
+              BF% <span className="text-gray-300">OPT</span>
             </label>
             <input
               type="number"
@@ -460,7 +359,7 @@ function Dashboard({
         <button
           type="submit"
           disabled={!weight}
-          className="w-full py-2.5 rounded text-[11px] tracking-[2px] transition-all disabled:opacity-25 bg-[rgba(233,69,96,0.1)] border border-[rgba(233,69,96,0.25)] text-[#e94560]"
+          className="w-full py-2.5 rounded-xl text-[11px] tracking-[2px] transition-all disabled:opacity-25 bg-blue-50 border border-blue-200 text-blue-500 font-medium"
         >
           LOG
         </button>
@@ -470,11 +369,11 @@ function Dashboard({
         data={weightData}
         label="WEIGHT"
         unit="lbs"
-        color="#e94560"
+        color="#3b82f6"
         target={goal.targetWeight}
       />
 
-      {hasBfChart && (
+      {hasBfChart && goal.targetBodyFat && (
         <ProgressChart
           data={bfData}
           label="BODY FAT"
@@ -490,10 +389,10 @@ function Dashboard({
         onDelete={onDelete}
       />
 
-      <div className="mt-2 pt-4 border-t border-[#111] text-center">
+      <div className="mt-2 pt-4 border-t border-gray-100 text-center">
         <button
           onClick={onReset}
-          className="text-[9px] tracking-[2px] text-[#333] hover:text-[#555] transition-colors"
+          className="text-[9px] tracking-[2px] text-gray-300 hover:text-gray-500 transition-colors"
         >
           RESET GOAL
         </button>
@@ -505,15 +404,8 @@ function Dashboard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProgressPage() {
-  const [goal, setGoal] = useState<Goal | null>(() => loadGoal());
+  const [goal] = useState<Goal>(() => loadGoal()!);
   const [checkIns, setCheckIns] = useState<CheckIn[]>(() => loadCheckIns());
-
-  const handleSetupComplete = (g: Goal, ci: CheckIn) => {
-    saveGoal(g);
-    const updated = upsertCheckIn(ci);
-    setGoal(g);
-    setCheckIns(updated);
-  };
 
   const handleCheckIn = (ci: CheckIn) => {
     setCheckIns(upsertCheckIn(ci));
@@ -525,17 +417,12 @@ export default function ProgressPage() {
 
   const handleReset = () => {
     clearProgress();
-    setGoal(null);
-    setCheckIns([]);
+    window.location.reload();
   };
-
-  if (checkIns.length === 0) {
-    return <SetupForm existingGoal={goal} onComplete={handleSetupComplete} />;
-  }
 
   return (
     <Dashboard
-      goal={goal!}
+      goal={goal}
       checkIns={checkIns}
       onCheckIn={handleCheckIn}
       onDelete={handleDelete}

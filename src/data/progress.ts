@@ -5,7 +5,11 @@ export interface Goal {
   startDate: string;
   endDate: string;
   targetWeight: number;
-  targetBodyFat: number;
+  targetBodyFat?: number;
+  startingWeight: number;
+  startingBodyFat?: number;
+  easyPaceMinPerMile: number;
+  raceTime?: string;
 }
 
 export interface CheckIn {
@@ -102,10 +106,29 @@ function buildSeries(
   return points;
 }
 
+function fmtPace(minPerMile: number): string {
+  const mins = Math.floor(minPerMile);
+  const secs = Math.round((minPerMile - mins) * 60);
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+export interface PaceTargets {
+  easy: { low: string; high: string };
+  tempo: { low: string; high: string };
+}
+
+export function derivePaceTargets(easyPaceMinPerMile: number): PaceTargets {
+  return {
+    easy:  { low: fmtPace(easyPaceMinPerMile + 0.25), high: fmtPace(easyPaceMinPerMile + 0.75) },
+    tempo: { low: fmtPace(easyPaceMinPerMile - 0.75), high: fmtPace(easyPaceMinPerMile - 0.5)  },
+  };
+}
+
 export function buildWeightData(checkIns: CheckIn[], goal: Goal): ChartDataPoint[] {
   return buildSeries(checkIns, goal, c => c.weight, g => g.targetWeight);
 }
 
 export function buildBodyFatData(checkIns: CheckIn[], goal: Goal): ChartDataPoint[] {
-  return buildSeries(checkIns, goal, c => c.bodyFat, g => g.targetBodyFat);
+  if (!goal.targetBodyFat) return [];
+  return buildSeries(checkIns, goal, c => c.bodyFat, g => g.targetBodyFat!);
 }
