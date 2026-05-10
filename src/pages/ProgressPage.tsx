@@ -291,7 +291,14 @@ function Dashboard({
   onDelete: (date: string) => void;
   onReset: () => void;
 }) {
-  const [date, setDate] = useState(todayStr());
+  const [date, setDate] = useState(() => {
+    if (checkIns.length === 0) return todayStr();
+    const last = checkIns[checkIns.length - 1].date;
+    const [y, m, d] = last.split('-').map(Number);
+    const next = new Date(y, m - 1, d + 1);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+  });
   const [weight, setWeight] = useState('');
   const [bodyFat, setBodyFat] = useState('');
 

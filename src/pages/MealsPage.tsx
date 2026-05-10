@@ -1,69 +1,138 @@
 import { useState } from 'react';
-import { mealPlan } from '../data/meals';
+import { mealPlan, Meal } from '../data/meals';
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function todayIndex(): number {
+  const day = new Date().getDay(); // 0=Sun
+  return day === 0 ? 6 : day - 1; // Mon=0 … Sun=6
+}
+
+let lastSelectedDay = todayIndex();
+
+const MEAL_KEYS = ['breakfast', 'lunch', 'dinner', 'snacks'] as const;
+type MealKey = typeof MEAL_KEYS[number];
+
+const MEAL_LABELS: Record<MealKey, string> = {
+  breakfast: 'BREAKFAST',
+  lunch: 'LUNCH',
+  dinner: 'DINNER',
+  snacks: 'SNACKS',
+};
+
+function MealCard({
+  mealKey, meal, expanded, onToggle,
+}: {
+  mealKey: MealKey;
+  meal: Meal;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      onClick={onToggle}
+      className={`rounded-2xl border cursor-pointer transition-colors ${
+        expanded ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+      }`}
+    >
+      <div className="flex items-center px-4 py-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] tracking-[2px] text-gray-400 mb-0.5">{MEAL_LABELS[mealKey]}</p>
+          <p className="text-[12px] text-gray-700 leading-snug">{meal.name}</p>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="px-4 pb-4 pt-0.5">
+          <ul className="mb-3 space-y-1">
+            {meal.ingredients.map((ing, i) => (
+              <li key={i} className="text-[10px] text-gray-500 flex gap-1.5">
+                <span className="text-gray-300 shrink-0">·</span>
+                <span>{ing}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="grid grid-cols-4 pt-3 border-t border-blue-100">
+            {[
+              { val: meal.calories, label: 'CALS', cls: 'text-blue-500' },
+              { val: `${meal.protein}g`, label: 'PROTEIN', cls: 'text-gray-600' },
+              { val: `${meal.carbs}g`, label: 'CARBS', cls: 'text-gray-600' },
+              { val: `${meal.fat}g`, label: 'FAT', cls: 'text-gray-600' },
+            ].map(({ val, label, cls }) => (
+              <div key={label} className="text-center">
+                <p className={`text-[13px] font-semibold ${cls}`}>{val}</p>
+                <p className="text-[8px] tracking-[1px] text-gray-400">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MealsPage() {
-  const [expandedMeal, setExpandedMeal] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState(lastSelectedDay);
+  const [collapsedMeals, setCollapsedMeals] = useState<Set<MealKey>>(new Set());
+
+  const row = mealPlan[selectedDay];
+  const totalCal = MEAL_KEYS.reduce((sum, k) => sum + row[k].calories, 0);
+  const totalProtein = MEAL_KEYS.reduce((sum, k) => sum + row[k].protein, 0);
+
+  const handleDaySelect = (i: number) => {
+    lastSelectedDay = i;
+    setSelectedDay(i);
+    setCollapsedMeals(new Set());
+  };
+
+  const handleToggle = (key: MealKey) => {
+    setCollapsedMeals(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   return (
     <div>
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        {/* Header row */}
-        <div className="grid grid-cols-[48px_1fr_1fr_1fr_72px] bg-gray-50 px-3.5 py-2.5 text-[9px] tracking-[2px] text-gray-400 border-b border-gray-100">
-          <div>DAY</div>
-          <div>BREAKFAST</div>
-          <div>LUNCH</div>
-          <div>DINNER</div>
-          <div className="text-right">PROTEIN</div>
-        </div>
-
-        {mealPlan.map((row, i) => (
-          <div key={row.day}>
-            <div
-              onClick={() => setExpandedMeal(expandedMeal === i ? null : i)}
-              className={`grid grid-cols-[48px_1fr_1fr_1fr_72px] px-3.5 py-3 items-center cursor-pointer border-b border-gray-100 transition-colors ${
-                expandedMeal === i ? 'bg-blue-50' : 'hover:bg-gray-50'
+      {/* Day selector */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-2 mb-4">
+        <div className="grid grid-cols-7 gap-1">
+          {DAYS.map((day, i) => (
+            <button
+              key={day}
+              onClick={() => handleDaySelect(i)}
+              className={`rounded-xl py-5 text-center transition-all ${
+                selectedDay === i ? 'bg-blue-500' : 'hover:bg-gray-50'
               }`}
             >
-              <div className={`font-display text-[20px] tracking-[2px] ${expandedMeal === i ? 'text-blue-500' : 'text-gray-800'}`}>
-                {row.day}
-              </div>
-              <div className="text-[10px] text-gray-500 pr-2 leading-snug">{row.breakfast}</div>
-              <div className="text-[10px] text-gray-500 pr-2 leading-snug">{row.lunch}</div>
-              <div className="text-[10px] text-gray-500 pr-2 leading-snug">{row.dinner}</div>
-              <div className="text-right">
-                <div className="text-[14px] font-semibold text-blue-500">{row.protein}g</div>
-                <div className="h-1 bg-gray-100 rounded mt-1 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded transition-[width] duration-500"
-                    style={{ width: `${(row.protein / 200) * 100}%` }}
-                  />
+              <p className={`text-[18px] tracking-[1px] font-semibold ${
+                selectedDay === i ? 'text-white' : 'text-gray-600'
+              }`}>
+                {day}
+              </p>
+              {selectedDay === i && (
+                <div className="mt-1.5">
+                  <p className="text-[10px] text-white leading-none">{totalCal} Cals</p>
+                  <p className="text-[10px] tracking-[0.5px] text-blue-200 mt-0.5">{totalProtein}g Protein</p>
                 </div>
-              </div>
-            </div>
-
-            {expandedMeal === i && (
-              <div className="px-3.5 pb-3.5 pt-1 grid grid-cols-3 gap-2">
-                {([
-                  ['🌅 B/FAST', row.breakfast],
-                  ['☀️ LUNCH',  row.lunch],
-                  ['🌙 DINNER', row.dinner],
-                ] as [string, string][]).map(([lbl, meal]) => (
-                  <div key={lbl} className="bg-gray-50 rounded-xl p-2.5">
-                    <div className="text-[9px] tracking-[2px] text-gray-400 mb-1.5">{lbl}</div>
-                    <div className="text-[11px] text-gray-700 leading-relaxed">{meal}</div>
-                  </div>
-                ))}
-                <div className="col-span-3 bg-blue-50 border border-blue-100 rounded-xl px-2.5 py-2 text-[10px] text-blue-500 tracking-[1px]">
-                  + Orgain shake (2 scoops) + Clif bar · ~60g protein daily
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-3 text-[10px] tracking-[1px] text-gray-400 text-center">
-        TAP ROW TO EXPAND · 180–200G PROTEIN · ~2,500 CAL
+      {/* Meal cards */}
+      <div className="space-y-2">
+        {MEAL_KEYS.map(key => (
+          <MealCard
+            key={key}
+            mealKey={key}
+            meal={row[key]}
+            expanded={!collapsedMeals.has(key)}
+            onToggle={() => handleToggle(key)}
+          />
+        ))}
       </div>
     </div>
   );

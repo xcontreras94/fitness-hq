@@ -42,8 +42,16 @@ _Avoid_: Threshold pace
 **Pace Line**
 A projected line on a Progress chart drawn from the first Check-in's value to the Goal's target value on the end date. Shows where the user should be each day to stay on track. Only rendered after the first Check-in is logged.
 
+**Meal**
+A single eating event (Breakfast, Lunch, Dinner, or Snack) within a day. Defined by a display name, a structured ingredient list with measurements, and a full macro breakdown (calories, protein, carbs, fat).
+_Avoid_: Food, item, entry
+
+**Snack**
+A Meal that appears as an always-visible sub-row beneath each day's main row in the Meal Plan table. Per-day in the data model (to allow future variation), currently uniform across all days.
+_Avoid_: Supplement, extra
+
 **Meal Plan**
-A fixed weekly table of meals: one Breakfast, Lunch, and Dinner per day, with a daily protein target. Does not vary by Week.
+A fixed weekly table of Meals: one Breakfast, Lunch, Dinner, and Snack per day. Does not vary by Week. The collapsed view shows meal names plus a daily calorie and protein summary; the expanded view shows per-Meal macro breakdown and ingredient list.
 
 **Grocery List**
 A categorized list of shopping items for the weekly Meal Plan. Static — does not vary by Week.

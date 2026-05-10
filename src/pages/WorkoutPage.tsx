@@ -3,8 +3,8 @@ import { schedules, typeEmoji, getLiftPlan, DaySchedule, Session, SessionType } 
 import { loadGoal, derivePaceTargets, PaceTargets } from '../data/progress';
 import WorkoutDetail from '../components/WorkoutDetail';
 
-const JS_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const JS_DOW = ['Sun', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const DAY_NAMES = ['Sun', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00');
